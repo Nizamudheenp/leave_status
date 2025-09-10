@@ -1,4 +1,4 @@
-const leaveDB = require('../models//LeaveRequest');
+const leaveDB = require('../models/LeaveRequest');
 const userDB = require('../models/userModel');
 
 const getNextApprover = async (currentRole) => {
@@ -15,10 +15,14 @@ exports.applyLeave = async (req, res) => {
         const { startDate, endDate, reason } = req.body;
         const employee = req.user;
 
+        if (employee.role !== 'Employee') {
+            return res.status(403).json({ message: 'Only employees can apply for leave' });
+        }
+
         const nextRole = await getNextApprover(employee.role);
         const nextApprover = await userDB.findOne({ role: nextRole });
 
-        const leave = new LeaveRequest({
+        const leave = new leaveDB({
             employeeId: employee._id,
             startDate,
             endDate,
@@ -38,9 +42,14 @@ exports.applyLeave = async (req, res) => {
     }
 };
 
+
+// leaveController.js
 exports.getLeave = async (req, res) => {
     try {
-        const leave = await leaveDB.findById(req.params.id)
+        const user = req.user;
+        const leaveId = req.params.id;
+
+        const leave = await leaveDB.findById(leaveId)
             .populate('employeeId', 'name role profileImage')
             .populate('currentApprover', 'name role profileImage')
             .populate('approvalFlow.approver', 'name role profileImage');
@@ -48,11 +57,48 @@ exports.getLeave = async (req, res) => {
         if (!leave) {
             return res.status(404).json({ message: 'Leave not found' });
         }
+
+        if (user.role === 'Employee') {
+            if (leave.employeeId._id.toString() !== user._id.toString()) {
+                return res.status(403).json({ message: 'Access denied' });
+            }
+        }
+        // Non-employees can view any leave
+
         res.json(leave);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
+
+// Get leaves related to the current user
+exports.getMyLeaves = async (req, res) => {
+  try {
+    const user = req.user;
+    let leaves;
+
+    if (user.role === 'Employee') {
+      // Employees see only their own leaves
+      leaves = await leaveDB.find({ employeeId: user._id })
+        .populate('employeeId', 'name role profileImage')
+        .populate('currentApprover', 'name role profileImage')
+        .populate('approvalFlow.approver', 'name role profileImage');
+    } else {
+      // Other roles see all leave requests
+      leaves = await leaveDB.find()
+        .populate('employeeId', 'name role profileImage')
+        .populate('currentApprover', 'name role profileImage')
+        .populate('approvalFlow.approver', 'name role profileImage');
+    }
+
+    res.json(leaves);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 
 exports.approveLeave = async (req, res) => {
     try {
@@ -73,7 +119,7 @@ exports.approveLeave = async (req, res) => {
         });
 
         const nextRole = await getNextApprover(approver.role);
-        const nextApprover = await User.findOne({ role: nextRole });
+        const nextApprover = await userDB.findOne({ role: nextRole });
 
         if (nextApprover) {
             leave.currentApprover = nextApprover._id;
