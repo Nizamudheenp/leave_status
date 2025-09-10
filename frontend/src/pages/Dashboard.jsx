@@ -46,6 +46,9 @@ export default function Dashboard(){
     fetch();
   }, [id, user]);
 
+
+
+
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!leave) return <div className="min-h-screen flex items-center justify-center text-red-500">Leave not found.</div>;
 

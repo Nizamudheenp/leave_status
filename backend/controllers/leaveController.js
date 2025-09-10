@@ -43,7 +43,6 @@ exports.applyLeave = async (req, res) => {
 };
 
 
-// leaveController.js
 exports.getLeave = async (req, res) => {
     try {
         const user = req.user;
@@ -63,7 +62,6 @@ exports.getLeave = async (req, res) => {
                 return res.status(403).json({ message: 'Access denied' });
             }
         }
-        // Non-employees can view any leave
 
         res.json(leave);
     } catch (error) {
@@ -72,20 +70,17 @@ exports.getLeave = async (req, res) => {
 };
 
 
-// Get leaves related to the current user
 exports.getMyLeaves = async (req, res) => {
   try {
     const user = req.user;
     let leaves;
 
     if (user.role === 'Employee') {
-      // Employees see only their own leaves
       leaves = await leaveDB.find({ employeeId: user._id })
         .populate('employeeId', 'name role profileImage')
         .populate('currentApprover', 'name role profileImage')
         .populate('approvalFlow.approver', 'name role profileImage');
     } else {
-      // Other roles see all leave requests
       leaves = await leaveDB.find()
         .populate('employeeId', 'name role profileImage')
         .populate('currentApprover', 'name role profileImage')

@@ -14,7 +14,6 @@ export const getMyLeaves = (token) =>
 export const applyLeave = (data, token) =>
   axios.post(`${BASE}/`, data, authHeader(token));
 
-/* IMPORTANT: server uses req.user (authMiddleware). DO NOT send approverId */
 export const approveLeave = (id, token) =>
   axios.put(`${BASE}/${id}/approve`, {}, authHeader(token));
 
