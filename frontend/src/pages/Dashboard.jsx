@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { getLeave, approveLeave, rejectLeave } from "../api/leaveApi";
 import { toast } from "react-toastify";
 
+
 const steps = ["Employee", "Team Lead", "Project Lead", "HR", "CEO"];
 const NODE_POS = {
   Employee: { x: 80, y: 100 },
@@ -40,6 +41,8 @@ export default function Dashboard() {
   const [leave, setLeave] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [animatingRole, setAnimatingRole] = useState(null);
+
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
@@ -75,8 +78,8 @@ export default function Dashboard() {
 
   const avatarFor = (role) => {
     const roleImages = {
-      "Employee": "/images/employee.png",
-      "Team Lead": "/images/teamlead.png",
+      "Employee": "/images/ceo.png",
+      "Team Lead": "/images/hr.png",
       "Project Lead": "/images/projectlead.png",
       "HR": "/images/hr.png",
       "CEO": "/images/ceo.png"
@@ -99,11 +102,16 @@ export default function Dashboard() {
     try {
       const res = await approveLeave(leave._id, user.token);
       setLeave(res.data.leave);
+      setAnimatingRole(currentRole);
       toast.success(res.data.message || "Approved");
+      setTimeout(() => {
+        setAnimatingRole(null);
+      }, 1000);
     } catch (err) {
       toast.error(err.response?.data?.message || "Approve failed");
     } finally {
       setProcessing(false);
+      setAnimatingRole(null);
     }
   };
 
@@ -133,25 +141,46 @@ export default function Dashboard() {
         <div className="relative bg-white rounded-lg p-8" style={{ height: 340 }}>
           <svg viewBox="0 0 1000 260" className="w-full h-full">
             <path d="M60 85 C110 350 160 130 200 140"
-              stroke={segmentStatus("Employee") === "approved" ? "#31ED31" : "#3f3f43dc"}
-              strokeWidth="3"
+              stroke={
+                segmentStatus("Employee") === "approved" || animatingRole === "Employee"
+                  ? "#31ED31"
+                  : "#3f3f43dc"
+              } strokeWidth="3"
               strokeDasharray="6 8"
-              fill="none" strokeLinecap="round" />
+              fill="none" strokeLinecap="round"
+              style={{
+                transition: "stroke 0.3s ease-in-out"
+              }} />
             <path d="M250 100 C260 100 250 40 400 25"
-              stroke={segmentStatus("Team Lead") === "approved" ? "#31ED31" : "#3f3f43dc"}
+              stroke={segmentStatus("Team Lead") === "approved" || animatingRole === "Team Lead"
+                ? "#31ED31"
+                : "#3f3f43dc"}
               strokeWidth="3"
               strokeDasharray="6 8"
-              fill="none" strokeLinecap="round" />
+              fill="none" strokeLinecap="round"
+              style={{
+                transition: "stroke 0.3s ease-in-out"
+              }} />
             <path d="M460 25 C550 10 420 190 610 135"
-              stroke={segmentStatus("Project Lead") === "approved" ? "#31ED31" : "#3f3f43dc"}
+              stroke={segmentStatus("Project Lead") === "approved" || animatingRole === "Project Lead"
+                ? "#31ED31"
+                : "#3f3f43dc"}
               strokeWidth="3"
               strokeDasharray="6 8"
-              fill="none" strokeLinecap="round" />
+              fill="none" strokeLinecap="round"
+              style={{
+                transition: "stroke 0.3s ease-in-out"
+              }} />
             <path d="M670 150 C780 250 750 110 830 75"
-              stroke={segmentStatus("HR") === "approved" ? "#31ED31" : "#3f3f43dc"}
+              stroke={segmentStatus("HR") === "approved" || animatingRole === "HR"
+                ? "#31ED31"
+                : "#3f3f43dc"}
               strokeWidth="3"
               strokeDasharray="6 8"
-              fill="none" strokeLinecap="round" />
+              fill="none" strokeLinecap="round"
+              style={{
+                transition: "stroke 0.3s ease-in-out"
+              }} />
           </svg>
 
           {steps.map((role) => {

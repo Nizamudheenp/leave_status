@@ -2,18 +2,21 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { applyLeave } from "../api/leaveApi";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const ApplyLeave = () => {
     const { user } = useSelector(s => s.auth);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [reason, setReason] = useState('');
+    const nav = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const res = await applyLeave({ startDate, endDate, reason }, user.token);
             toast.success(res.data.message);
+            nav('/open')
         } catch (err) {
             toast.error(err.response?.data?.message || "Error applying leave");
         }
