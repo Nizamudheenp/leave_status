@@ -6,27 +6,37 @@ import { toast } from "react-toastify";
 
 const steps = ["Employee", "Team Lead", "Project Lead", "HR", "CEO"];
 const NODE_POS = {
-  Employee: { x: 100, y: 90 },
-  "Team Lead": { x: 300, y: 160 },
-  "Project Lead": { x: 500, y: 60 },
+  Employee: { x: 80, y: 100 },
+  "Team Lead": { x: 260, y: 160 },
+  "Project Lead": { x: 480, y: 60 },
   HR: { x: 700, y: 180 },
-  CEO: { x: 920, y: 80 },
+  CEO: { x: 920, y: 100 },
 };
 
 function Avatar({ src, alt, status }) {
-  const base = "w-16 h-16 rounded-full border-4 border-white object-cover";
+  const base = "w-full h-full object-cover transition-all duration-300";
   const classes =
     status === "approved"
-      ? `${base} avatar-glow node-shadow`
+      ? `${base}`
       : status === "current"
-      ? `${base} avatar-active node-shadow`
-      : `${base} node-shadow`;
-  return <img src={src} alt={alt} className={classes} onError={(e)=> e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(alt)}&background=eeeeee&color=111111`} />;
+        ? `${base}`
+        : `${base}`;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={classes}
+      onError={(e) =>
+        (e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(alt)}&background=eeeeee&color=111111`)
+      }
+    />
+  );
 }
 
-export default function Dashboard(){
+
+export default function Dashboard() {
   const { id } = useParams();
-  const { user } = useSelector(s => s.auth);
+  const { user } = useSelector((s) => s.auth);
   const [leave, setLeave] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -42,29 +52,46 @@ export default function Dashboard(){
       } finally {
         setLoading(false);
       }
-    }
+    };
     fetch();
   }, [id, user]);
-
-
-
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!leave) return <div className="min-h-screen flex items-center justify-center text-red-500">Leave not found.</div>;
 
-  const approvedRoles = (leave.approvalFlow || []).filter(s=>s.status === 'Approved').map(s => s.approver.role);
+  const approvedRoles = (leave.approvalFlow || []).filter(s => s.status === 'Approved').map(s => s.approver.role);
   const currentRole = leave.currentApprover ? leave.currentApprover.role : null;
   const isCurrentApprover = (user && currentRole && user.role === currentRole && leave.status === "Pending");
 
+  // const avatarFor = (role) => {
+  //   if (role === leave.employeeId.role || (leave.employeeId && role === "Employee")) {
+  //     return leave.employeeId.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(leave.employeeId.name)}&background=ffffff&color=111111`;
+  //   }
+  //   const flowEntry = (leave.approvalFlow || []).find(f => f.approver && f.approver.role === role);
+  //   if (flowEntry && flowEntry.approver && flowEntry.approver.profileImage) return flowEntry.approver.profileImage;
+  //   if (leave.currentApprover && leave.currentApprover.role === role && leave.currentApprover.profileImage) return leave.currentApprover.profileImage;
+  //   return `https://ui-avatars.com/api/?name=${encodeURIComponent(role)}&background=ffffff&color=111111`;
+  // };
+
   const avatarFor = (role) => {
+    const roleImages = {
+      "Employee": "/images/employee.png",
+      "Team Lead": "/images/teamlead.png",
+      "Project Lead": "/images/projectlead.png",
+      "HR": "/images/hr.png",
+      "CEO": "/images/ceo.png"
+    };
+
     if (role === leave.employeeId.role || (leave.employeeId && role === "Employee")) {
-      return leave.employeeId.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(leave.employeeId.name)}&background=ffffff&color=111`;
+      return roleImages["Employee"];
     }
-    const flowEntry = (leave.approvalFlow || []).find(f => f.approver && f.approver.role === role);
-    if (flowEntry && flowEntry.approver && flowEntry.approver.profileImage) return flowEntry.approver.profileImage;
-    if (leave.currentApprover && leave.currentApprover.role === role && leave.currentApprover.profileImage) return leave.currentApprover.profileImage;
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(role)}&background=ffffff&color=111`;
+    if (roleImages[role]) {
+      return roleImages[role];
+    }
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(role)}&background=ffffff&color=111111`;
   };
+
 
   const handleApprove = async () => {
     if (!isCurrentApprover) return;
@@ -99,31 +126,31 @@ export default function Dashboard(){
   };
 
   return (
-    <div className="min-h-screen bg-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-semibold mb-6">Leave Status</h1>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 className="text-2xl text-[#4D4D4D] border-b-2 border-[#43C8FF] pb-5 mb-4">Leave Status</h1>
 
-        <div className="relative bg-white rounded p-8 shadow-sm" style={{height: 340}}>
+        <div className="relative bg-white rounded-lg p-8" style={{ height: 340 }}>
           <svg viewBox="0 0 1000 260" className="w-full h-full">
-            <path d="M100 90 C180 110 220 110 300 160"
-              stroke={segmentStatus("Employee")==="approved" ? "#10B981" : "#9CA3AF"}
-              strokeWidth="4"
-              strokeDasharray="10 8"
+            <path d="M60 85 C110 350 160 130 200 140"
+              stroke={segmentStatus("Employee") === "approved" ? "#31ED31" : "#3f3f43dc"}
+              strokeWidth="3"
+              strokeDasharray="6 8"
               fill="none" strokeLinecap="round" />
-            <path d="M300 160 C380 200 420 120 500 60"
-              stroke={segmentStatus("Team Lead")==="approved" ? "#10B981" : "#9CA3AF"}
-              strokeWidth="4"
-              strokeDasharray="10 8"
+            <path d="M250 100 C260 100 250 40 400 25"
+              stroke={segmentStatus("Team Lead") === "approved" ? "#31ED31" : "#3f3f43dc"}
+              strokeWidth="3"
+              strokeDasharray="6 8"
               fill="none" strokeLinecap="round" />
-            <path d="M500 60 C580 10 620 160 700 180"
-              stroke={segmentStatus("Project Lead")==="approved" ? "#10B981" : "#9CA3AF"}
-              strokeWidth="4"
-              strokeDasharray="10 8"
+            <path d="M460 25 C550 10 420 190 610 135"
+              stroke={segmentStatus("Project Lead") === "approved" ? "#31ED31" : "#3f3f43dc"}
+              strokeWidth="3"
+              strokeDasharray="6 8"
               fill="none" strokeLinecap="round" />
-            <path d="M700 180 C780 210 840 140 920 80"
-              stroke={segmentStatus("HR")==="approved" ? "#10B981" : "#9CA3AF"}
-              strokeWidth="4"
-              strokeDasharray="10 8"
+            <path d="M670 150 C780 250 750 110 830 75"
+              stroke={segmentStatus("HR") === "approved" ? "#31ED31" : "#3f3f43dc"}
+              strokeWidth="3"
+              strokeDasharray="6 8"
               fill="none" strokeLinecap="round" />
           </svg>
 
@@ -134,27 +161,31 @@ export default function Dashboard(){
             const status = approved ? "approved" : current ? "current" : "upcoming";
             const avatar = avatarFor(role);
             return (
-              <div key={role} style={{position:'absolute', left: `${pos.x - 40}px`, top: `${pos.y - 40}px`, width: 80, textAlign: 'center'}}>
+              <div key={role} style={{ position: 'absolute', left: `${pos.x - 40}px`, top: `${pos.y - 40}px`, width: 80, textAlign: 'center' }}>
                 <div className="flex justify-center mb-2">
-                  <div className={`rounded-full w-20 h-20 border-4 border-white ${approved ? 'avatar-glow' : current ? 'avatar-active' : ''} node-shadow`} style={{overflow:'hidden'}}>
+                  <div className={`rounded-full w-16 h-16 border border-gray-300 overflow-hidden ${approved ? 'avatar-glow' : current ? 'avatar-active' : ''} node-shadow`}>
                     <Avatar src={avatar} alt={role} status={status} />
                   </div>
                 </div>
-                <div className="text-center mt-2 text-sm">{role}</div>
+                <div className="text-center mt-2 text-sm font-medium">{role}</div>
               </div>
             );
           })}
         </div>
 
         {user.role !== "Employee" && isCurrentApprover && (
-          <div className="flex justify-center mt-6 gap-4">
-            <button onClick={handleApprove} disabled={processing} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50">
-              Approve
-            </button>
-            <button onClick={handleReject} disabled={processing} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50">
-              Reject
-            </button>
+          <div className="mt-6 flex flex-col items-end">
+            <p className="text-gray-600 text-left mr-12 mb-4">Check Details, Then Approve or Reject</p>
+            <div className="flex gap-4">
+              <button onClick={handleReject} disabled={processing} className="bg-[#F34040] text-white px-7 py-2 rounded-md shadow hover:bg-red-700 disabled:opacity-50 transition">
+                Reject Leave
+              </button>
+              <button onClick={handleApprove} disabled={processing} className="bg-[#31ED31] text-white px-7 py-2 rounded-md shadow hover:bg-green-700 disabled:opacity-50 transition">
+                Approve Leave
+              </button>
+            </div>
           </div>
+
         )}
       </div>
     </div>
