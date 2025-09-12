@@ -66,6 +66,8 @@ export default function Dashboard() {
   const currentRole = leave.currentApprover ? leave.currentApprover.role : null;
   const isCurrentApprover = (user && currentRole && user.role === currentRole && leave.status === "Pending");
 
+  // avatar from backend 
+
   // const avatarFor = (role) => {
   //   if (role === leave.employeeId.role || (leave.employeeId && role === "Employee")) {
   //     return leave.employeeId.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(leave.employeeId.name)}&background=ffffff&color=111111`;
@@ -101,9 +103,11 @@ export default function Dashboard() {
     setProcessing(true);
     try {
       const res = await approveLeave(leave._id, user.token);
-      setLeave(res.data.leave);
-      setAnimatingRole(currentRole);
       toast.success(res.data.message || "Approved");
+      setAnimatingRole(currentRole);
+      const updatedLeave = await getLeave(leave._id, user.token);
+      setLeave(updatedLeave.data);
+
       setTimeout(() => {
         setAnimatingRole(null);
       }, 1000);
@@ -111,7 +115,6 @@ export default function Dashboard() {
       toast.error(err.response?.data?.message || "Approve failed");
     } finally {
       setProcessing(false);
-      setAnimatingRole(null);
     }
   };
 
@@ -120,8 +123,9 @@ export default function Dashboard() {
     setProcessing(true);
     try {
       const res = await rejectLeave(leave._id, user.token);
-      setLeave(res.data.leave);
       toast.error(res.data.message || "Rejected");
+      const updatedLeave = await getLeave(leave._id, user.token);
+      setLeave(updatedLeave.data);
     } catch (err) {
       toast.error(err.response?.data?.message || "Reject failed");
     } finally {
@@ -149,7 +153,7 @@ export default function Dashboard() {
               strokeDasharray="6 8"
               fill="none" strokeLinecap="round"
               style={{
-                transition: "stroke 0.3s ease-in-out"
+                transition: "stroke 2s ease-in-out"
               }} />
             <path d="M250 100 C260 100 250 40 400 25"
               stroke={segmentStatus("Team Lead") === "approved" || animatingRole === "Team Lead"
@@ -159,7 +163,7 @@ export default function Dashboard() {
               strokeDasharray="6 8"
               fill="none" strokeLinecap="round"
               style={{
-                transition: "stroke 0.3s ease-in-out"
+                transition: "stroke 2s ease-in-out"
               }} />
             <path d="M460 25 C550 10 420 190 610 135"
               stroke={segmentStatus("Project Lead") === "approved" || animatingRole === "Project Lead"
@@ -169,7 +173,7 @@ export default function Dashboard() {
               strokeDasharray="6 8"
               fill="none" strokeLinecap="round"
               style={{
-                transition: "stroke 0.3s ease-in-out"
+                transition: "stroke 2s ease-in-out"
               }} />
             <path d="M670 150 C780 250 750 110 830 75"
               stroke={segmentStatus("HR") === "approved" || animatingRole === "HR"
@@ -179,7 +183,7 @@ export default function Dashboard() {
               strokeDasharray="6 8"
               fill="none" strokeLinecap="round"
               style={{
-                transition: "stroke 0.3s ease-in-out"
+                transition: "stroke 2s ease-in-out"
               }} />
           </svg>
 
@@ -192,7 +196,7 @@ export default function Dashboard() {
             return (
               <div key={role} style={{ position: 'absolute', left: `${pos.x - 40}px`, top: `${pos.y - 40}px`, width: 80, textAlign: 'center' }}>
                 <div className="flex justify-center mb-2">
-                  <div className={`rounded-full w-16 h-16 border border-gray-300 overflow-hidden ${approved ? 'avatar-glow' : current ? 'avatar-active' : ''} node-shadow`}>
+                  <div className={`rounded-full w-16 h-16 border border-gray-300 overflow-hidden ${approved ? 'avatar-glow' : current ?  'avatar-active' : ''} ${animatingRole === role ? 'avatar-current-glow' : ''} node-shadow`}>
                     <Avatar src={avatar} alt={role} status={status} />
                   </div>
                 </div>
